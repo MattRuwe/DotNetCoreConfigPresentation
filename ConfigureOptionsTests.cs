@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -7,7 +8,7 @@ using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
-namespace Config
+namespace Config.ConfigureOptions
 {
     [TestClass]
     public class ConfigureOptionsTests
@@ -18,27 +19,27 @@ namespace Config
             Host.CreateDefaultBuilder()
                 .ConfigureServices(services =>
                 {
-                    services.AddHostedService<MyHostedWorker>();
+                    services.AddHostedService<TestHostedWorker>();
                     services.AddTransient<IConfigureOptions<MyWorkerOptionsDependsOnOtherOptions>, ConfigureMyWorkerOptions>();
-                    services.AddOptions<MyBaseOptions>().Configure(_ =>
+                    services.Configure<MyBaseOptions>(_ =>
                     {
                         _.Value1 = "MyBaseOptionsValue 2";
                     });
                 })
-                .ConfigureAppConfiguration(configBuilder =>
+                .ConfigureLogging((hostBuilderContext, logBuilder) =>
                 {
-                    
+                    logBuilder.ClearProviders();
                 })
                 .Build().Run();
         }
     }
 
-    public class MyHostedWorker : BackgroundService
+    public class TestHostedWorker : BackgroundService
     {
         private IConfiguration _config;
         private IHostApplicationLifetime _lifeTime;
         IOptions<MyWorkerOptionsDependsOnOtherOptions> _myWorkerOptions;
-        public MyHostedWorker(IConfiguration config, IHostApplicationLifetime lifeTime, IOptions<MyWorkerOptionsDependsOnOtherOptions> myWorkerOptions)
+        public TestHostedWorker(IConfiguration config, IHostApplicationLifetime lifeTime, IOptions<MyWorkerOptionsDependsOnOtherOptions> myWorkerOptions)
         {
             _config = config;
             _lifeTime = lifeTime;
